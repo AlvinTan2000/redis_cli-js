@@ -23,10 +23,10 @@ var createKey = async () => {
     await rtsCli.create(rtsKey).retention(60000).send();
 }
 
-var rts = 0;
+var rts = 1;
 // Function that repeats Redis actions with specific Poisson mean rate
-var addTSValues = poisson.create(50,async () => {
-    rtsCli.add(rtsKey, Date.now(), 100).send().then().catch(function () {
+var addTSValues = poisson.create(10,async () => {
+    rtsCli.add(rtsKey, rts, 100).send().then().catch(function () {
         console.log("problem")
     });
     rts ++;
@@ -45,8 +45,8 @@ setTimeout(function() {
 
 /** TESTING REDIS SORTED SETS **/
 
-var rss = 0;
-var addSSValues = poisson.create (50, async () => {
+var rss = 1;
+var addSSValues = poisson.create (10, async () => {
     await rCli.zadd(['zaddKey', Date.now(), rss]);
     rss++;
 })
