@@ -12,41 +12,50 @@ const rCli = redis.createClient(redisOpt);
 const rtsCli = new redisTS(redisOpt);
 
 // Create a key
-const key = 'testKey';
+const rtsKey = "rtsKey";
 
-// // Create key in database
-// var createKey = async () => {
-//     await rtsCli.connect();
-//     await rtsCli.create(key).retention(60000).send();
-// }
-//
-// // Function that repeats Redis actions with specific Poisson mean rate
-// var addTSValues = poisson.create(500,async () => {
-//     await rtsCli.add(key, Date.now(), 100).send();
-//     console.log("test")
-// })
 
-var i=0
-var addSSValues = poisson.create (500, async () => {
-    await rCli.zadd([key, Date.now(), i]);
-    i++;
+/** TESTING REDIS TIME SERIES **/
+
+// Create key in database
+var createKey = async () => {
+    await rtsCli.connect();
+    await rtsCli.create(rtsKey).retention(60000).send();
+}
+
+var rts = 0;
+// Function that repeats Redis actions with specific Poisson mean rate
+var addTSValues = poisson.create(50,async () => {
+    rtsCli.add(rtsKey, Date.now(), 100).send().then().catch(function () {
+        console.log("problem")
+    });
+    rts ++;
+})
+
+
+// Testing
+createKey();
+addTSValues.start();
+setTimeout(function() {
+    addTSValues.stop();
+    console.log("Amount of TS.ADDs: " + rts);
+}, 5000);
+
+
+
+/** TESTING REDIS SORTED SETS **/
+
+var rss = 0;
+var addSSValues = poisson.create (50, async () => {
+    await rCli.zadd(['zaddKey', Date.now(), rss]);
+    rss++;
 })
 
 addSSValues.start();
 setTimeout(function() {
     addSSValues.stop();
-    console.log(i);
+    console.log("Amount oft ZADDs: " + rss);
 }, 5000);
-//
-//
-// /******************************/
-//
-// createKey();
-// addTSValues.start();
-// setTimeout(function() {
-//     addTSValues.stop();
-//     console.log("done");
-// }, 5000);
-//
-//
-// /******************************/
+
+
+/** Reset **/
