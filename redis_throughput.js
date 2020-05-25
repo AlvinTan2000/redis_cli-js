@@ -23,41 +23,25 @@ const createKey = async () => {
 };
 
 // Benchmarking time series writes
-const writeTSValues = async () => {
-    await rtsCli.connect();     // Connect client
-
+function writeTSValues () {
     let promises = [];          // Array of Promises
 
-    let start = Date.now();
-
-    // Repeatedly write data, add promises to array and then await all
+    // Repeatedly write data and add promises to array
     for (let i = sampleTime; i <= sampleTime + 500; i++) {
         promises.push(rtsCli.add(rtsKey, i, i).send());
     }
-    await Promise.all(promises);
-
-    let end = Date.now();
-
-    console.log("Time taken for time series writes: " + (end - start));
+    return promises
 };
 
 // Benchmarking time series reads
-const readTSValues = async () => {
-    await rtsCli.connect();     // Connect client
-
+function readTSValues () {
     let promises = [];          // Array of Promises
 
-    let start = Date.now();
-
-    // Repeatedly write data, add promises to array and then await all
+    // Repeatedly write data and add promises to array
     for (let i = sampleTime; i <= sampleTime + 500; i++) {
         promises.push(rtsCli.range(rtsKey, 0, i).send());
     }
-    await Promise.all(promises);
-
-    let end = Date.now();
-
-    console.log("Time taken for time series read: " + (end - start));
+    return promises;
 };
 
 
@@ -65,29 +49,19 @@ const readTSValues = async () => {
 const zaddKey = 'zaddKey';      // Create ZADD key in database
 
 // Benchmarking ZADD writes
-const writeSSValues = async () => {
-    await rtsCli.connect();     // Connect client
-
+function writeSSValues () {
     let promises = [];          // Array of Promises
     let ZADD = promisify(rCli.zadd).bind(rCli);    // Promisify "ZADD" action
-
-    let start = Date.now();
 
     // Repeatedly write data, add promises to array and then await all
     for (let i = sampleTime; i <= sampleTime + 500; i++) {
         promises.push(ZADD(zaddKey, i, i));
     }
-    await Promise.all(promises);
-
-    let end = Date.now();
-
-    console.log("Time taken for ZADD writes: " + (end - start));
-};
+    return promises;
+}
 
 // Benchmarking ZADD reads
-var readSSValues = async () => {
-    await rtsCli.connect();         // Connect client
-
+function readSSValues () {
     let promises = [];          // Array of Promises
     let ZRANGE = promisify(rCli.zrange).bind(rCli);    // Promisify "ZADD" action
 
@@ -97,21 +71,42 @@ var readSSValues = async () => {
     for (let i = sampleTime; i <= sampleTime + 500; i++) {
         promises.push(ZRANGE(zaddKey, 0, i));
     }
-    await Promise.all(promises);
 
-    let end = Date.now();
-z
-    console.log("Time taken for ZADD writes: " + (end-start));
+    return promises;
 }
 
 
-// Testing
 const benchmark = async () => {
+
+    let start;
+    let end;
+
     await createKey();
-    await writeTSValues();
-    await readTSValues();
-    await writeSSValues();
-    await readSSValues()
+
+    start = Date.now();
+    let writeTS = writeTSValues();
+    await Promise.all(writeTS);
+    end = Date.now();
+    console.log("Time taken for TS writes: " + (end-start));
+
+    start = Date.now();
+    let readTS = readTSValues();
+    await Promise.all(readTS);
+    end = Date.now();
+    console.log("Time taken for TS reads: " + (end-start));
+
+    start = Date.now();
+    let writeSS = writeSSValues();
+    await Promise.all(writeSS);
+    end = Date.now();
+    console.log("Time taken for ZADD writes: " + (end-start));
+
+    start = Date.now();
+    let readSS = readSSValues();
+    await Promise.all(readSS);
+    end = Date.now();
+    console.log("Time taken for ZADD reads: " + (end-start));
+
 };
 
 benchmark().then();
