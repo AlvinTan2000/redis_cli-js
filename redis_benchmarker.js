@@ -2,19 +2,19 @@ const BENCHMARK_ITERATIONS = parseInt(1e3);
 const NSEC_PER_SEC = parseInt(1e9);
 
 let start, stop;
-let result = [0,0];
+let result = [0, 0];
 
-function startClock () {
+function startClock() {
     // console.log("Start clock");
     start = process.hrtime();
 }
 
-function stopClock () {
+function stopClock() {
     // console.log("Stop clock");
     stop = process.hrtime(start);
 }
 
-function printResult (iterations) {
+function printResult(iterations) {
     iterations = iterations ? iterations : BENCHMARK_ITERATIONS;
 
     let totalNanoSeconds = stop[0] * NSEC_PER_SEC + stop[1];
