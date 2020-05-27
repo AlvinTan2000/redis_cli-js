@@ -11,11 +11,9 @@ const redisOpt = {
 const rCli = redis.createClient(redisOpt);
 const rtsCli = new redisTS(redisOpt);
 
-// Create a key
-const rtsKey = "rtsKey";
-
 
 /** TESTING REDIS TIME SERIES **/
+const rtsKey = "rtsKey";
 
 // Create key in database
 var createKey = async () => {

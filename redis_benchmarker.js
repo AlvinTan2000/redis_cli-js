@@ -1,4 +1,4 @@
-const BENCHMARK_ITERATIONS = parseInt(1e3);
+const BENCHMARK_ITERATIONS = parseInt(1e5);
 const NSEC_PER_SEC = parseInt(1e9);
 
 let start, stop;
@@ -23,14 +23,8 @@ function printResult(iterations) {
     result[1] = average % NSEC_PER_SEC;
 
     console.log("\033[1;31m");
-    console.log("Total time elapsed: %d.%s seconds",
-        stop[0], stop[1].toString().padStart(9, '0')
-    );
-    console.log(
-        'Average time is %d.%s second(s) for %d iterations',
-        result[0],
-        result[1].toString().padStart(9, '0'),
-        iterations
+    console.log("Total time elapsed: %d.%s seconds for %d iterations",
+        stop[0], stop[1].toString().padStart(9, '0'), iterations
     );
 }
 

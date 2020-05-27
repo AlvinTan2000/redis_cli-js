@@ -1,12 +1,12 @@
-const redis = require('redis');
-const benchmarker = require('./redis_benchmarker')
+const IORedis = require('ioredis');
+const benchmarker = require('../redis_benchmarker')
 
 // Start Redis server with following options
 const redisOpt = {
     host: 'localhost',
     port: 7000
 }
-const redisClient = redis.createClient(redisOpt);
+const redisClient = new IORedis(redisOpt);
 
 const SAMPLE_TIME = 1577836800;
 let replyCounter = 0;
@@ -16,11 +16,9 @@ const ZADDKEY = 'zaddkey';      // Create ZADD key in database
 
 function asynchronousZADD() {
     for (let i = 0; i < benchmarker.BENCHMARK_ITERATIONS; i++) {
-        console.log("Async", i);
         redisClient.zadd(ZADDKEY, i + SAMPLE_TIME, i,
             // Callback func. to increase reply counter and call synchronously ZADDs
             function (error, result) {
-                console.log("Async. CB", i);
                 replyCounter++;
                 synchronousZADD(1, i);
             })
@@ -28,16 +26,13 @@ function asynchronousZADD() {
 }
 
 function synchronousZADD(recurDepth, uID) {
-    console.log("Sync", uID);
     redisClient.zadd(ZADDKEY, recurDepth + SAMPLE_TIME, recurDepth + (uID + 1) * benchmarker.BENCHMARK_ITERATIONS,
         function (error, result) {
-
-            console.log("Sync. CB", uID, recurDepth);
 
             recurDepth++
 
             // Recursive Case: Recursion depth not reached
-            if (recurDepth <= 3) {
+            if (recurDepth <= 10) {
                 synchronousZADD(recurDepth, uID);
             }
             // Base Case: Last recursion
@@ -47,6 +42,7 @@ function synchronousZADD(recurDepth, uID) {
                     // Stop benchmarker clock and print result
                     benchmarker.stopClock();
                     benchmarker.printResult(replyCounter);
+                    redisClient.flushall();
                 }
             }
         })

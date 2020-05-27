@@ -13,5 +13,8 @@
     "poisson-process": "^1.0.0",
     "redis": "^3.0.2",
     "redistimeseries-js": "^2.0.0"
+  },
+  "devDependencies": {
+    "ioredis": "^4.17.1"
   }
 }
