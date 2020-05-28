@@ -51,3 +51,20 @@ function main() {
 }
 
 main();
+
+
+function testZremForSetLength(setLength, callback) {
+    var start = process.hrtime();
+
+    redisClient.eval("redis.call(\"ZADD\", \"test-key\", 1, 1)", 0, 0, function (error, result) {
+        console.log(result);
+        var end = process.hrtime(start);
+        console.info("Execution time for set length of %d: %ds %ds", setLength, end[0], end[1]/1000000000);
+
+        callback();
+    });
+}
+
+testZremForSetLength(100000, () => {
+    process.exit();
+});
