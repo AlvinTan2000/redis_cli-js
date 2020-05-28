@@ -1,4 +1,4 @@
-const BENCHMARK_ITERATIONS = parseInt(1e5);
+const BENCHMARK_ITERATIONS = parseInt(1e4);
 const NSEC_PER_SEC = parseInt(1e9);
 
 let start, stop;
