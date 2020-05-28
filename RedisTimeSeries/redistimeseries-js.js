@@ -40,7 +40,9 @@ async function asynchronousTSADD() {
 }
 
 
-function asynchronousTSRANGE() {
+async function asynchronousTSRANGE() {
+    await redisTSClient.connect();
+
     benchmarker.startClock();
     for (let i = 0; i < benchmarker.BENCHMARK_ITERATIONS; i++) {
         redisTSClient.range(rtsKey, i+SAMPLE_TIME, i+SAMPLE_TIME+1).send().then(
@@ -60,7 +62,7 @@ function asynchronousTSRANGE() {
 }
 
 function main() {
-    asynchronousTSADD();
+    asynchronousTSRANGE();
 }
 
 main();

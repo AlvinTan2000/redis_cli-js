@@ -54,8 +54,8 @@ function asynchronousZRANGE() {
 }
 
 function main() {
-    redisClient.flushall();
-    asynchronousZADD();
+    // redisClient.flushall();
+    asynchronousZRANGE();
 }
 
 main();
