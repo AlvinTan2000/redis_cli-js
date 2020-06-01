@@ -13,6 +13,10 @@ redisReply *reply;
 const char *hostname = "127.0.0.1";
 const int port = 6379;
 
+static const char ZADDKEY[] = "zaddkey";
+
+static int replyCounter = 0;
+
 void syncZADD() {
     const char *ZADDKEY = strdup("zaddkey");
 
@@ -27,6 +31,7 @@ void syncZADD() {
     stop_clock();
     print_result(BENCHMARK_ITERATIONS);
 }
+
 
 void syncTADD() {
 
@@ -52,6 +57,9 @@ void syncTADD() {
 
 
 void getCallback(redisAsyncContext *c, void *r, void *privdata) {
+    if (replyCounter == 0) {
+        start_clock();
+    }
     redisReply *reply = r;
     if (reply == NULL) {
         if (c->errstr) {
@@ -59,10 +67,18 @@ void getCallback(redisAsyncContext *c, void *r, void *privdata) {
         }
         return;
     }
-    printf("argv[%s]: %s\n", (char *) privdata, reply->str);
-
-    /* Disconnect after receiving the reply to GET */
-    redisAsyncDisconnect(c);
+    replyCounter++;
+//    printf("argv[%s]: %s\n", (char *) privdata, reply->str);
+    if (replyCounter == BENCHMARK_ITERATIONS) {
+        stop_clock();
+        print_result(BENCHMARK_ITERATIONS);
+        restart_clock();
+        replyCounter = 0;
+        start_clock();
+        for (int j = SAMPLE_TIME; j < BENCHMARK_ITERATIONS + SAMPLE_TIME; j++) {
+            redisAsyncCommand(redisAsyncCtx, getCallback, NULL, "ZRANGE %s %d %d", ZADDKEY, j, j + 1);
+        }
+    }
 }
 
 void connectCallback(const redisAsyncContext *c, int status) {
@@ -111,7 +127,19 @@ void asyncConnect() {
 
     redisAsyncSetConnectCallback(redisAsyncCtx, connectCallback);
     redisAsyncSetDisconnectCallback(redisAsyncCtx, disconnectCallback);
+}
 
+
+void asyncZADD() {
+    for (int j = SAMPLE_TIME; j < BENCHMARK_ITERATIONS + SAMPLE_TIME; j++) {
+        redisAsyncCommand(redisAsyncCtx, getCallback, NULL, "ZADD %s %d %d", ZADDKEY, j, j);
+    }
+}
+
+void asyncTADD() {
+    for (int j = SAMPLE_TIME; j < BENCHMARK_ITERATIONS + SAMPLE_TIME; j++) {
+        redisAsyncCommand(redisAsyncCtx, getCallback, NULL, "TS.ADD rtskey %d 100", j);
+    }
 }
 
 int main(int argc, char **argv) {
@@ -123,16 +151,38 @@ int main(int argc, char **argv) {
 
     redisLibeventAttach(redisAsyncCtx, base);
 
-    redisAsyncCommand(redisAsyncCtx, NULL, NULL, "SET key %b", argv[argc - 1], strlen(argv[argc - 1]));
-    redisAsyncCommand(redisAsyncCtx, getCallback, (char *) "end-1", "GET key");
+    reply = redisCommand(redisSyncCtx, "FLUSHALL");
+    if (reply->type == REDIS_REPLY_ERROR) {
+        printf("%s\n", reply->str);
+    }
+    freeReplyObject(reply);
+
+
+//    syncZADD();
+//
+//    printf("Testing sync. TADD");
+//    syncTADD();
+
+
+//    reply = redisCommand(redisSyncCtx, "FLUSHALL");
+//    if (reply->type == REDIS_REPLY_ERROR) {
+//        printf("%s\n", reply->str);
+//    }
+//    freeReplyObject(reply);
+//
+//
+    reply = redisCommand(redisSyncCtx, "TS.CREATE rtskey");
+    if (reply->type == REDIS_REPLY_ERROR) {
+        printf("%s\n", reply->str);
+    }
+    freeReplyObject(reply);
+//
+//    asyncZADD();
+
+    asyncTADD();
+
+    redisAsyncDisconnect(redisAsyncCtx);
     event_base_dispatch(base);
-
-    syncZADD();
-
-    restart_clock();
-
-    syncTADD();
-
 
     /* Disconnects and frees the context */
     redisFree(redisSyncCtx);
