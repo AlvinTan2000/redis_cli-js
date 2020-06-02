@@ -1,58 +1,62 @@
-const redis = require('redis');
-const benchmarker = require('../redis_benchmarker')
+/* Redis modules and custom benchmarking module */
+const Redis = require('redis');
+const benchmarker = require('../redis_benchmarker');
+const {SAMPLE_TIME} = require("../redis_benchmarker");
+const {ZADDKEY} = require("../redis_benchmarker");
 
-const redisOpt = {
-    host: 'localhost',
-    port: 6379
+/* Initialize redis client */
+const redisCli = Redis.createClient(benchmarker.REDIS_OPT);
+
+/* Read and write counter for determining last callback */
+let writeCounter = 0;
+let readCounter = 0;
+
+/* CALLBACKS */
+function zaddCB() {
+    if (writeCounter === 0) {
+        benchmarker.startClock();
+    }
+    writeCounter++;
+    if (writeCounter >= benchmarker.BENCHMARK_ITERATIONS) {
+        benchmarker.stopClock();
+        benchmarker.printResult(writeCounter);
+        asynchronousZRANGE();
+    }
 }
-const redisClient = redis.createClient(redisOpt);
-
-const SAMPLE_TIME = 1577836800;
-let replyCounter = 0;
-
-
-/** TESTING REDIS SORTED SETS **/
-const ZADDKEY = 'zaddKey';      // Create ZADD key in database
-
-function asynchronousZADD() {
-    for (let i = 0; i < benchmarker.BENCHMARK_ITERATIONS; i++) {
-        redisClient.eval("redis.call(\"ZADD\", \"" + ZADDKEY + "\"," + i + "," + i + ")", 0, 0,
-            // redisClient.zadd(ZADDKEY, i + SAMPLE_TIME, i,
-            //     Callback to increase reply counter, which stops the timer and print results if last reply
-            function (error, result) {
-                if (replyCounter === 0) {
-                    benchmarker.startClock();
-
-                }
-                replyCounter++;
-                if (replyCounter >= benchmarker.BENCHMARK_ITERATIONS) {
-                    benchmarker.stopClock();
-                    benchmarker.printResult(replyCounter);
-                    replyCounter = 0;
-                    asynchronousZRANGE();
-                }
-            })
+function zrangeCB() {
+    if (readCounter === 0) {
+        benchmarker.startClock();
+    }
+    readCounter++;
+    if (readCounter >= benchmarker.BENCHMARK_ITERATIONS) {
+        benchmarker.stopClock();
+        benchmarker.printResult(writeCounter);
     }
 }
 
+
+/* CLIENT ITERATIONS */
+function asynchronousZADD() {
+    for (let i = SAMPLE_TIME; i < benchmarker.BENCHMARK_ITERATIONS + SAMPLE_TIME; i++) {
+        redisCli.zadd(ZADDKEY, i, i, zaddCB);
+    }
+}
+/* Alternative way of calling ZADD through .eval() */
+// function asynchronousZADDAlt() {
+//     for (let i = SAMPLE_TIME; i < benchmarker.BENCHMARK_ITERATIONS + SAMPLE_TIME; i++) {
+//         redisCli.eval("redis.call(\"ZADD\", \"" + ZADDKEY + "\"," + i + "," + i + ")", 0, 0,zaddCB);
+//     }
+// }
 function asynchronousZRANGE() {
     for (let i = 0; i < benchmarker.BENCHMARK_ITERATIONS; i++) {
-        redisClient.zrange(ZADDKEY, i + SAMPLE_TIME, i + SAMPLE_TIME + 1, 'WITHSCORES',
-            function (error, result) {
-                if (replyCounter === 0) {
-                    benchmarker.startClock();
-                }
-                replyCounter++;
-                if (replyCounter >= benchmarker.BENCHMARK_ITERATIONS) {
-                    benchmarker.stopClock();
-                    benchmarker.printResult(replyCounter);
-                }
-            })
+        redisCli.zrange(ZADDKEY, i, i+1, zrangeCB);
     }
 }
 
+
+/* MAIN TESTER */
 function main() {
-    redisClient.flushall();
+    redisCli.flushall();
     asynchronousZADD();
 }
 

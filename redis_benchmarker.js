@@ -1,5 +1,11 @@
 const BENCHMARK_ITERATIONS = parseInt(1e5);
 const NSEC_PER_SEC = parseInt(1e9);
+const SAMPLE_TIME = Date.now();
+const ZADDKEY = 'zaddkey';
+const REDIS_OPT = {
+    host: 'localhost',
+    port: 6379
+}
 
 let start, stop;
 let result = [0, 0];
@@ -32,5 +38,8 @@ module.exports = {
     startClock: startClock,
     stopClock: stopClock,
     printResult: printResult,
-    BENCHMARK_ITERATIONS: BENCHMARK_ITERATIONS
+    BENCHMARK_ITERATIONS: BENCHMARK_ITERATIONS,
+    REDIS_OPT: REDIS_OPT,
+    SAMPLE_TIME: SAMPLE_TIME,
+    ZADDKEY: ZADDKEY
 }
