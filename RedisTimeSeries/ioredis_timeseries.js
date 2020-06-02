@@ -1,3 +1,4 @@
+/* Redis modules and custom benchmarking module */
 const IORedis = require('ioredis');
 const {Command} = require('ioredis');
 const callback = require('../redis_callbacks');
@@ -22,7 +23,7 @@ function asynchronousTSADD() {
 
 function asynchronousTSRANGE() {
     for (let i = SAMPLE_TIME; i < benchmarker.BENCHMARK_ITERATIONS + SAMPLE_TIME; i++) {
-        redisCli.sendCommand(new Command("TS.RANGE", [RTSKEY, i, i], 'utf-8', () => callback.rangeCB()));
+        redisCli.sendCommand(new Command("TS.RANGE", [RTSKEY, i, i+1], 'utf-8', () => callback.rangeCB()));
     }
 }
 
@@ -35,7 +36,7 @@ function asynchronousTSADDAlt() {
 
 function asynchronousTSRANGEAlt() {
     for (let i = SAMPLE_TIME; i < benchmarker.BENCHMARK_ITERATIONS + SAMPLE_TIME; i++) {
-        redisCli.call("TS.RANGE", [RTSKEY, i, i], 'utf-8', () => callback.rangeCB());
+        redisCli.call("TS.RANGE", [RTSKEY, i, i+1], 'utf-8', () => callback.rangeCB());
     }
 }
 

@@ -1,3 +1,4 @@
+/* Redis modules and custom benchmarking module */
 const redis = require('redis');
 const callback = require('../redis_callbacks');
 const benchmarker = require('../redis_benchmarker')
@@ -21,7 +22,7 @@ function asynchronousTSADD() {
 
 function asynchronousTSRANGE() {
     for (let i = SAMPLE_TIME; i < benchmarker.BENCHMARK_ITERATIONS + SAMPLE_TIME; i++) {
-        redisCli.send_command("TS.RANGE", [RTSKEY, i, i], () => callback.rangeCB());
+        redisCli.send_command("TS.RANGE", [RTSKEY, i, i+1], () => callback.rangeCB());
     }
 }
 
