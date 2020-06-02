@@ -14,6 +14,7 @@ function asynchronousZADD() {
         redisCli.zadd(ZADDKEY, i, i, () => callback.addCB(asynchronousZRANGE));
     }
 }
+
 function asynchronousZRANGE() {
     for (let i = 0; i < benchmarker.BENCHMARK_ITERATIONS; i++) {
         redisCli.zrange(ZADDKEY, i, i + 1, () => callback.rangeCB());
