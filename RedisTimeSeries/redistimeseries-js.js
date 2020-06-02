@@ -4,29 +4,29 @@ const benchmarker = require('../redis_benchmarker')
 
 const redisOpt = {
     host: 'localhost',
-    port: 7000
+    port: 6379
 }
 const redisTSClient = new redisTS(redisOpt);
 
 const SAMPLE_TIME = 1577836800;
 let replyCounter = 0;
 
-/** TESTING REDIS TIME SERIES **/
+/** TESconst rtsKey = "rtsKey";
+TING REDIS TIME SERIES **/
 const rtsKey = "rtsKey";
 
 
 async function asynchronousTSADD() {
     await redisTSClient.connect();
     await redisTSClient.create(rtsKey).send();
-    benchmarker.startClock();
     for (let i = 0; i < benchmarker.BENCHMARK_ITERATIONS; i++) {
 
         redisTSClient.add(rtsKey,i+SAMPLE_TIME, 100).send().then(
             // Callback to increase reply counter, which stops the timer and print results if last reply
             (error, result) => {
-                // if (replyCounter==0){
-                //     benchmarker.startClock();
-                // }
+                if (replyCounter==0){
+                    benchmarker.startClock();
+                }
                 replyCounter++;
                 if (replyCounter >= benchmarker.BENCHMARK_ITERATIONS) {
                     benchmarker.stopClock();
@@ -41,16 +41,13 @@ async function asynchronousTSADD() {
 
 
 async function asynchronousTSRANGE() {
-    await redisTSClient.connect();
-
-    benchmarker.startClock();
     for (let i = 0; i < benchmarker.BENCHMARK_ITERATIONS; i++) {
         redisTSClient.range(rtsKey, i+SAMPLE_TIME, i+SAMPLE_TIME+1).send().then(
             // Callback to increase reply counter, which stops the timer and print results if last reply
             (result) => {
-                // if (replyCounter==0){
-                //     benchmarker.startClock();
-                // }
+                if (replyCounter===0){
+                    benchmarker.startClock();
+                }
                 replyCounter++;
                 if (replyCounter >= benchmarker.BENCHMARK_ITERATIONS) {
                     benchmarker.stopClock();
@@ -62,7 +59,7 @@ async function asynchronousTSRANGE() {
 }
 
 function main() {
-    asynchronousTSRANGE();
+    asynchronousTSADD();
 }
 
 main();

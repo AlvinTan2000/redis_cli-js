@@ -3,7 +3,7 @@ const benchmarker = require('../redis_benchmarker')
 
 const redisOpt = {
     host: 'localhost',
-    port: 7000
+    port: 6379
 }
 const redisClient = redis.createClient(redisOpt);
 
@@ -15,21 +15,20 @@ let replyCounter = 0;
 const ZADDKEY = 'zaddKey';      // Create ZADD key in database
 
 function asynchronousZADD() {
-        benchmarker.startClock();
     for (let i = 0; i < benchmarker.BENCHMARK_ITERATIONS; i++) {
-        redisClient.eval("redis.call(\"ZADD\", \""+ZADDKEY+"\"," +i+","+i+")", 0, 0,
-        // redisClient.zadd(ZADDKEY, i + SAMPLE_TIME, i,
-        //     Callback to increase reply counter, which stops the timer and print results if last reply
+        redisClient.eval("redis.call(\"ZADD\", \"" + ZADDKEY + "\"," + i + "," + i + ")", 0, 0,
+            // redisClient.zadd(ZADDKEY, i + SAMPLE_TIME, i,
+            //     Callback to increase reply counter, which stops the timer and print results if last reply
             function (error, result) {
-            // if (replyCounter==0){
-            //     benchmarker.startClock();
-            //
-            // }
+                if (replyCounter === 0) {
+                    benchmarker.startClock();
+
+                }
                 replyCounter++;
                 if (replyCounter >= benchmarker.BENCHMARK_ITERATIONS) {
                     benchmarker.stopClock();
                     benchmarker.printResult(replyCounter);
-                    replyCounter = 0 ;
+                    replyCounter = 0;
                     asynchronousZRANGE();
                 }
             })
@@ -37,13 +36,12 @@ function asynchronousZADD() {
 }
 
 function asynchronousZRANGE() {
-        benchmarker.startClock();
     for (let i = 0; i < benchmarker.BENCHMARK_ITERATIONS; i++) {
-        redisClient.zrange(ZADDKEY, i+SAMPLE_TIME, i+SAMPLE_TIME + 1, 'WITHSCORES',
+        redisClient.zrange(ZADDKEY, i + SAMPLE_TIME, i + SAMPLE_TIME + 1, 'WITHSCORES',
             function (error, result) {
-                // if (replyCounter==0){
-                //     benchmarker.startClock();
-                // }
+                if (replyCounter === 0) {
+                    benchmarker.startClock();
+                }
                 replyCounter++;
                 if (replyCounter >= benchmarker.BENCHMARK_ITERATIONS) {
                     benchmarker.stopClock();
@@ -54,8 +52,8 @@ function asynchronousZRANGE() {
 }
 
 function main() {
-    // redisClient.flushall();
-    asynchronousZRANGE();
+    redisClient.flushall();
+    asynchronousZADD();
 }
 
 main();
