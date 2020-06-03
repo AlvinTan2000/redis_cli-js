@@ -14,10 +14,21 @@ function asynchronousZADD() {
         redisCli.zadd(ZADDKEY, i, i, () => callback.addCB(asynchronousZRANGE));
     }
 }
-
 function asynchronousZRANGE() {
     for (let i = 0; i < benchmarker.BENCHMARK_ITERATIONS; i++) {
         redisCli.zrange(ZADDKEY, i, i + 1, () => callback.rangeCB());
+    }
+}
+
+/* Alternative way of calling ZADD through .send_command()  */
+function asynchronousZADDAlt() {
+    for (let i = SAMPLE_TIME; i < benchmarker.BENCHMARK_ITERATIONS + SAMPLE_TIME; i++) {
+        redisCli.send_command("ZADD", [ZADDKEY, i, i], () => callback.addCB(asynchronousZRANGEAlt()));
+    }
+}
+function asynchronousZRANGEAlt() {
+    for (let i = SAMPLE_TIME; i < benchmarker.BENCHMARK_ITERATIONS + SAMPLE_TIME; i++) {
+        redisCli.send_command("ZRANGE", [ZADDKEY, i, i+1,'WITHSCORES'], () => callback.rangeCB());
     }
 }
 
