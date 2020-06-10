@@ -1,7 +1,8 @@
-const BENCHMARK_ITERATIONS = parseInt(1e5);
+const BENCHMARK_ITERATIONS = parseInt(1e6);
+const WARMUP_ITERATIONS = parseInt(1e6);
 const NSEC_PER_SEC = parseInt(1e9);
 const SAMPLE_TIME = Date.now();
-const ZADDKEY = 'zaddkey';
+const SSKEY = 'zaddkey';
 const RTSKEY = "rtskey";
 const REDIS_OPT = {
     host: 'localhost',
@@ -33,6 +34,7 @@ function printResult(iterations) {
     console.log("Total time elapsed: %d.%s seconds for %d iterations",
         stop[0], stop[1].toString().padStart(9, '0'), iterations
     );
+    console.log("\x1b[0m");
 }
 
 module.exports = {
@@ -40,8 +42,9 @@ module.exports = {
     stopClock: stopClock,
     printResult: printResult,
     BENCHMARK_ITERATIONS: BENCHMARK_ITERATIONS,
+    WARMUP_ITERATIONS : WARMUP_ITERATIONS,
     REDIS_OPT: REDIS_OPT,
     SAMPLE_TIME: SAMPLE_TIME,
-    ZADDKEY: ZADDKEY,
+    SSKEY: SSKEY,
     RTSKEY: RTSKEY
 }
