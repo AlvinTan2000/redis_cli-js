@@ -1,37 +1,20 @@
 const benchmarker = require('./redis_benchmarker');
 
 /* Read and write counter for determining last callback */
-let writeCounter = 0;
-let readCounter = 0;
+let counter = 0;
 
 /* CALLBACKS */
-function addCB(cb) {
-    /* Start timer upon first callback */
-    if (writeCounter === 0) {
-        benchmarker.startClock();
-    }
-    writeCounter++;
-    /* End timer upon last callback */
-    if (writeCounter >= benchmarker.BENCHMARK_ITERATIONS) {
+async function redisCB(iterations, cb) {
+    counter++;
+    /* End timer upon last callback and call next function */
+    if (counter >= iterations) {
         benchmarker.stopClock();
-        benchmarker.printResult(writeCounter);
+        benchmarker.printResult(counter);
+        counter=0;
         cb();
-    }
-}
-function rangeCB() {
-    /* Start timer upon first callback */
-    if (readCounter === 0) {
-        benchmarker.startClock();
-    }
-    readCounter++;
-    /* End timer upon last callback */
-    if (readCounter >= benchmarker.BENCHMARK_ITERATIONS) {
-        benchmarker.stopClock();
-        benchmarker.printResult(writeCounter);
     }
 }
 
 module.exports = {
-    addCB : addCB,
-    rangeCB : rangeCB
+    redisCB : redisCB,
 }
