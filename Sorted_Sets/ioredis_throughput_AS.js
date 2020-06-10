@@ -9,11 +9,14 @@ const {WARMUP_ITERATIONS} = require("../redis_benchmarker");
 const {BENCHMARK_ITERATIONS} = require("../redis_benchmarker");
 const {redisCommand} = require("../redis_benchmarker");
 
-const option = 1;
+/* Different command option
+*   0 : zadd / zrange
+*   1 : send_command
+*   2 : call
+*/
+const option = 0;
 
-/* Initialize redis client */
 const redisCli = new IORedis(Benchmarker.REDIS_OPT);
-
 
 function zadd(offset, iterations, callback) {
     switch (option) {

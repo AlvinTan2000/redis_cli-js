@@ -1,112 +1,73 @@
-// Redis, Redis Time Series and Poisson Process Modules
-const redis = require('redis');
-const redisTS = require('redistimeseries-js');
-const { promisify } = require('util');
+/* Redis and util library + custom callbacks and benchmarking module */
+const Redis = require('redis');
+const cb = require('../redis_promise_callbacks');
+const benchmarker = require('../redis_benchmarker');
+const {SAMPLE_TIME} = require("../redis_benchmarker");
+const {SSKEY} = require("../redis_benchmarker");
+const {promisify} = require('util');
 
-// Start Redis server with following options
-const redisOpt = {
-    host: 'localhost',
-    port: 7000
-}
-const rCli = redis.createClient(redisOpt);
-const rtsCli = new redisTS(redisOpt);
+/* Initialize redis client */
+const rCli = Redis.createClient(benchmarker.REDIS_OPT);
+let FLUSHALL = promisify(rCli.flushall).bind(rCli);    // Promisify ZADD
+let ZADD = promisify(rCli.zadd).bind(rCli);    // Promisify ZADD
+let ZRANGE = promisify(rCli.zrange).bind(rCli);     // Promisify "ZADD" action
 
 
-const sampleTime = 1577836800;
+/* CLIENT ITERATIONS */
+async function zaddVal(offset, iterations) {
+    let promises = [];                             // Array of Promises
 
-/** TESTING REDIS TIME SERIES **/
-// Creates time series key in database
-const rtsKey = "rtsKey";
-const createKey = async () => {
-    await rtsCli.connect();
-    await rtsCli.create(rtsKey).retention(60000).send();
-};
+    benchmarker.startClock();
 
-// Benchmarking time series writes
-function writeTSValues () {
-    let promises = [];          // Array of Promises
-
-    // Repeatedly write data and add promises to array
-    for (let i = sampleTime; i <= sampleTime + 500; i++) {
-        promises.push(rtsCli.add(rtsKey, i, i).send());
+    // Iteratively push ZADD promises to array
+    for (let i = offset; i < offset + iterations; i++) {
+        promises.push(ZADD(SSKEY, i, i,).catch(console.log));
     }
-    return promises
-};
+    await Promise.all(promises);
 
-// Benchmarking time series reads
-function readTSValues () {
-    let promises = [];          // Array of Promises
-
-    // Repeatedly write data and add promises to array
-    for (let i = sampleTime; i <= sampleTime + 500; i++) {
-        promises.push(rtsCli.range(rtsKey, 0, i).send());
-    }
-    return promises;
-};
-
-
-/** TESTING REDIS SORTED SETS **/
-const zaddKey = 'zaddKey';      // Create ZADD key in database
-
-// Benchmarking ZADD writes
-function writeSSValues () {
-    let promises = [];          // Array of Promises
-    let ZADD = promisify(rCli.zadd).bind(rCli);    // Promisify "ZADD" action
-
-    // Repeatedly write data, add promises to array and then await all
-    for (let i = sampleTime; i <= sampleTime + 500; i++) {
-        promises.push(ZADD(zaddKey, i, i));
-    }
-    return promises;
+    benchmarker.stopClock();
+    benchmarker.printResult();
 }
 
-// Benchmarking ZADD reads
-function readSSValues () {
-    let promises = [];          // Array of Promises
-    let ZRANGE = promisify(rCli.zrange).bind(rCli);    // Promisify "ZADD" action
+async function zrangeVal(offset, iterations) {
+    let promises = [];                                  // Array of Promises
 
-    let start = Date.now();
+    benchmarker.startClock();
 
     // Repeatedly read data, add promises to array and then await all
-    for (let i = sampleTime; i <= sampleTime + 500; i++) {
-        promises.push(ZRANGE(zaddKey, 0, i));
+    for (let i = offset; i < offset+iterations; i++) {
+        promises.push(ZRANGE(SSKEY, i, i + 1).catch(console.log));
     }
+    await Promise.all(promises);
 
-    return promises;
+    benchmarker.stopClock();
+    benchmarker.printResult();
 }
 
 
-const benchmark = async () => {
+async function main() {
+    await FLUSHALL();
 
-    let start;
-    let end;
+    process.stdout.write("WARMING UP WRITE THROUGHPUT")
+    await zaddVal(SAMPLE_TIME, benchmarker.WARMUP_ITERATIONS);
+    cb.resetCB();
 
-    await createKey();
+    process.stdout.write("WARMING UP READ THROUGHPUT")
+    await zrangeVal(0, benchmarker.WARMUP_ITERATIONS);
+    console.log("\x1b[0m");
+    cb.resetCB();
 
-    start = Date.now();
-    let writeTS = writeTSValues();
-    await Promise.all(writeTS);
-    end = Date.now();
-    console.log("Time taken for TS writes: " + (end-start));
+    process.stdout.write("TESTING SORTED SETS WRITE THROUGHPUT")
+    await zaddVal(SAMPLE_TIME+benchmarker.WARMUP_ITERATIONS, benchmarker.BENCHMARK_ITERATIONS);
+    console.log("\x1b[0m");
+    cb.resetCB();
 
-    start = Date.now();
-    let readTS = readTSValues();
-    await Promise.all(readTS);
-    end = Date.now();
-    console.log("Time taken for TS reads: " + (end-start));
+    process.stdout.write("TESTING SORTED SETS READ THROUGHPUT")
+    await zrangeVal(benchmarker.WARMUP_ITERATIONS, benchmarker.BENCHMARK_ITERATIONS);
+    console.log("\x1b[0m");
+    cb.resetCB();
 
-    start = Date.now();
-    let writeSS = writeSSValues();
-    await Promise.all(writeSS);
-    end = Date.now();
-    console.log("Time taken for ZADD writes: " + (end-start));
+    process.exit(1);
+}
 
-    start = Date.now();
-    let readSS = readSSValues();
-    await Promise.all(readSS);
-    end = Date.now();
-    console.log("Time taken for ZADD reads: " + (end-start));
-
-};
-
-benchmark().then();
+main();
