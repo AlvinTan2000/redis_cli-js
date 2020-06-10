@@ -26,6 +26,7 @@ function tsrange(offset, iterations, callback) {
     });
 }
 
+
 /* MAIN TESTER */
 async function main() {
     redisCli.flushall(() => {
@@ -35,10 +36,10 @@ async function main() {
             console.log("CREATED KEY \n")
 
             process.stdout.write("WARM UP TSADD");
-            tsadd(SAMPLE_TIME, WARMUP_ITERATIONS, () => {
+            tsadd(SAMPLE_TIME, WARMUP_ITERATIONS,  () => {
 
                 process.stdout.write("WARM UP TSRANGE");
-                tsrange(SAMPLE_TIME, WARMUP_ITERATIONS, async () => {
+                tsrange(SAMPLE_TIME, WARMUP_ITERATIONS, () => {
 
                     process.stdout.write("TESTING TSADD");
                     tsadd(SAMPLE_TIME + WARMUP_ITERATIONS, BENCHMARK_ITERATIONS, () => {

@@ -13,7 +13,7 @@ const {redisCommand} = require("../redis_benchmarker");
 *   0 : send_command
 *   1 : call
 */
-let option = 0;
+let option = 1;
 
 const redisCli = new IORedis(REDIS_OPT);
 
@@ -64,7 +64,7 @@ async function main() {
     tsadd(SAMPLE_TIME, WARMUP_ITERATIONS, () => {
 
         process.stdout.write("WARM UP TSRANGE");
-        tsrange(SAMPLE_TIME, WARMUP_ITERATIONS, async () => {
+        tsrange(SAMPLE_TIME, WARMUP_ITERATIONS, () => {
 
             process.stdout.write("TESTING TSADD");
             tsadd(SAMPLE_TIME + WARMUP_ITERATIONS, BENCHMARK_ITERATIONS, () => {
