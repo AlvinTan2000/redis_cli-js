@@ -12,6 +12,14 @@ const REDIS_OPT = {
 let start, stop;
 let result = [0, 0];
 
+/* Time any redis command for specified iterations */
+function redisCommand(offset, iterations, command) {
+    startClock()
+    for (let i = offset; i < offset + iterations; i++) {
+        command(i);
+    }
+}
+
 function startClock() {
     // console.log("Start clock");
     start = process.hrtime();
@@ -38,11 +46,12 @@ function printResult(iterations) {
 }
 
 module.exports = {
+    redisCommand: redisCommand,
     startClock: startClock,
     stopClock: stopClock,
     printResult: printResult,
     BENCHMARK_ITERATIONS: BENCHMARK_ITERATIONS,
-    WARMUP_ITERATIONS : WARMUP_ITERATIONS,
+    WARMUP_ITERATIONS: WARMUP_ITERATIONS,
     REDIS_OPT: REDIS_OPT,
     SAMPLE_TIME: SAMPLE_TIME,
     SSKEY: SSKEY,
