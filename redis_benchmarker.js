@@ -1,5 +1,5 @@
-const BENCHMARK_ITERATIONS = parseInt(1e6);
-const WARMUP_ITERATIONS = parseInt(1e6);
+const BENCHMARK_ITERATIONS = parseInt(1e5);
+const WARMUP_ITERATIONS = parseInt(1e5);
 const NSEC_PER_SEC = parseInt(1e9);
 const SAMPLE_TIME = Date.now();
 const SSKEY = 'zaddkey';

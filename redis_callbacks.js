@@ -4,7 +4,7 @@ const Benchmarker = require('./redis_benchmarker');
 let counter = 0;
 
 /* CALLBACKS */
-async function redisCB(iterations, cb) {
+function redisCB(iterations, cb) {
     counter++;
 
     /* End timer upon last callback and call next function */
