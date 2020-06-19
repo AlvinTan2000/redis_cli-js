@@ -11,6 +11,8 @@ SET(
         SOURCE_FILES
         main.c
         benchmarker.c benchmarker.h
+        sortedSets.c sortedSets.h
+        timeSeries.c timeSeries.h
 )
 
 ADD_EXECUTABLE("${PROJECT_NAME}" "${SOURCE_FILES}")
