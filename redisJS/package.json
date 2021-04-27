@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "poisson-process": "^1.0.0",
-    "redis": "^3.0.2",
+    "redis": "^3.1.1",
     "redistimeseries-js": "^2.0.0"
   },
   "devDependencies": {
